@@ -1,0 +1,112 @@
+
+
+import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/foundation.dart' as foundation;
+
+bool get isIos => foundation.defaultTargetPlatform == foundation.TargetPlatform.iOS;
+bool get isAndroid => foundation.defaultTargetPlatform == foundation.TargetPlatform.android;
+final bool isDeveloping = false;
+
+final Color backgroundColor = Color(0xFFFAFAFA);
+final Color mainColor = Color(0xFF475df3);
+final Color navColor = Color(0xFF2C3054);
+final Color selectedItemColor = /*Color.fromRGBO(254, 198, 208, 1)*/ Colors.white;
+final Color buttonColor = Color(0xFF475df3);
+const kTextColor = Color(0XFF282828);
+
+final double borderRadius = kIsWeb ? 20.0 : 14.0;
+final double elevation = 0;
+
+final MaterialColor appColor = MaterialColor(
+  Color.fromRGBO(44, 48, 84, 1.0).value,
+  <int, Color>{
+    50: Color.fromRGBO(44, 48, 84, .1),
+    100: Color.fromRGBO(44, 48, 84, .2),
+    200: Color.fromRGBO(44, 48, 84, .3),
+    300: Color.fromRGBO(44, 48, 84, .4),
+    400: Color.fromRGBO(44, 48, 84, .5),
+    500: Color.fromRGBO(44, 48, 84, .6),
+    600: Color.fromRGBO(44, 48, 84, .7),
+    700: Color.fromRGBO(44, 48, 84, .8),
+    800: Color.fromRGBO(44, 48, 84, .9),
+    900: Color.fromRGBO(44, 48, 84, 1),
+  },
+);
+
+final Color darkColor = Color.fromRGBO(227, 203, 228, 1);
+
+final kMainTitleStyle = TextStyle(
+  // color: Color.fromRGBO(227, 203, 228, 1),
+  color: kTextColor,
+  fontWeight: FontWeight.w700,
+  fontSize: 29.0,
+);
+
+final kSubtitleStyle = TextStyle(
+  // color: Color.fromRGBO(227, 203, 228, 1),
+  color: navColor,
+  fontWeight: FontWeight.w500,
+  fontSize: 22.0,
+);
+
+final kMainTextStyle = TextStyle(
+  // color: Color.fromRGBO(227, 203, 228, 1),
+  color: kTextColor,
+  fontSize: 19.0,
+);
+
+final String appName = "Naggapwam";
+final String tagline = "Protect yourself, your family, and your community";
+final String subTagline = "Together we can stop the spread of COVID-19";
+
+final List<String> navigations = ["Dashboard", "Record Visit", "More"];
+
+final List<String> genders = [
+  "Female",
+  "Male",
+];
+
+final List<String> barangays = [
+  "BARANGAY I", "BARANGAY II", "BARANGAY III", "BARANGAY IV", "ILOCANOS NORTE"
+];
+
+final List<String> relationships = [
+  "Family", "Spouse", "Relative", "Friend", "Colleague", "Employer", "Neighbor", "Others"
+];
+
+final List<String> categories = [
+  "Government", "Private", "Commercial", "School", "Health", "Transportation", "Worship"
+];
+
+//Helper Methods
+/// Method to validate email id returns true if email is valid
+bool isEmailValid(String email) {
+  Pattern pattern =
+      r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+  RegExp regex = RegExp(pattern);
+  if (regex.hasMatch(email))
+    return true;
+  else
+    return false;
+}
+
+Future<bool> requestPermission(Permission permission) async {
+  if (await permission.isGranted) {
+    return true;
+  } else {
+    var result = await permission.request();
+    if (result == PermissionStatus.granted) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void showSnackBar(String title, GlobalKey<ScaffoldState> _scaffoldKey) => _scaffoldKey.currentState.showSnackBar(
+  SnackBar(
+    content: Text(title, textAlign: (isIos ? TextAlign.center : TextAlign.start)),
+  ),
+);

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "915756950064",
+    "firebase_url": "https://naggapwam-covid-tracing-default-rtdb.firebaseio.com",
+    "project_id": "naggapwam-covid-tracing",
+    "storage_bucket": "naggapwam-covid-tracing.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:915756950064:android:8114f7e2ec657c661e43f5",
+        "android_client_info": {
+          "package_name": "com.example.covidcapstone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "915756950064-7m6gobro6bie06gopat57qfsecnq02ke.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.covidcapstone",
+            "certificate_hash": "3dab9d40c84cfe351f8d6cdb0d8bce7e7e2ca917"
+          }
+        },
+        {
+          "client_id": "915756950064-o7r1qgath95k53i8v8cpvh3ku8g1mao7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChg2lEzFaOO3zEid9ovyc0pZJJC2WTsiA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "915756950064-o7r1qgath95k53i8v8cpvh3ku8g1mao7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "915756950064-jsok7164b090lu9frgvdksbeb2ghqc58.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.covidcapstone"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
