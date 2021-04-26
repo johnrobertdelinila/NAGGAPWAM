@@ -25,10 +25,6 @@ class QrRegistrationPage extends StatelessWidget {
   final Citizen _citizen = Citizen();
   final HealthDeclaration _hdf = HealthDeclaration();
 
-  String capitalize(String str) {
-    return "${str[0].toUpperCase()}${str.substring(1)}";
-  }
-
   void insert(Citizen citiz, HealthDeclaration hd, BuildContext context) async {
     final firestoreReference = FirebaseFirestore.instance;
     final citizens = firestoreReference.collection("citizens");
@@ -42,6 +38,12 @@ class QrRegistrationPage extends StatelessWidget {
       "address": citiz.barangay,
       "id_number": refCitizen.id
     });
+  }
+
+  void update(HealthDeclaration hd, String id_number) {
+    final firestoreReference = FirebaseFirestore.instance;
+    final healthDeclarations = firestoreReference.collection("hdf");
+    healthDeclarations.doc(id_number).update(hd.toJson());
   }
 
   @override

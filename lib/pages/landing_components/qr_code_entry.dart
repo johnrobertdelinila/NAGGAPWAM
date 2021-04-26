@@ -2,6 +2,7 @@ import 'package:covidcapstone/Services/constants.dart';
 import 'package:covidcapstone/Widgets/Buttons/filled_button_adaptive.dart';
 import 'package:covidcapstone/widgets/action_sheet_adaptive.dart';
 import 'package:covidcapstone/widgets/alertdialog_adaptive.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -85,6 +86,11 @@ class Jumbotron extends StatelessWidget {
               "text": "Sign In",
               "action": (){
                 // Navigator.pop(context);
+                final User user = FirebaseAuth.instance.currentUser;
+                final uid = user.uid;
+                if(uid != null) {
+                  return Navigator.pushNamed(context, "/qrScan");
+                }
                 Navigator.of(context).pushNamed("/signIn");
               }
             },

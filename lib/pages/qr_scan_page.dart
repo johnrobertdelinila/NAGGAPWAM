@@ -4,6 +4,11 @@
 // import 'dart:html';
 // import 'dart:ui' as ui;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:covidcapstone/models/citizen.dart';
+import 'package:covidcapstone/models/health_declaration.dart';
+import 'package:covidcapstone/models/naggapwam_static_id.dart';
+import 'package:covidcapstone/pages/health_declaration_page.dart';
 import 'package:covidcapstone/services/constants.dart';
 import 'package:covidcapstone/widgets/alertdialog_adaptive.dart';
 import 'package:covidcapstone/widgets/scaffold_adaptive.dart';
@@ -69,7 +74,7 @@ class QRScanPageState extends State<QrScanPage> {
             return Center(child: Text("Please allow the Camera permission to scan QR Code."));
           }
         }else {
-          return Center(child: (isIos ? CupertinoActivityIndicator(
+          return Center(child: (!isAndroid ? CupertinoActivityIndicator(
             animating: true,
             radius: 20,
           ) : CircularProgressIndicator()));
@@ -103,12 +108,16 @@ class QRScanPageState extends State<QrScanPage> {
 
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      // setState(() {
-      //   result = scanData;
-      // });
-
-      Navigator.of(context).pushNamedAndRemoveUntil("/", (route) => false);
+    controller.scannedDataStream.listen((scanData) async {
+      controller.pauseCamera();
+      NaggapwamStaticId.id_number = scanData.code;
+      FirebaseFirestore.instance.collection("citizens").doc(scanData.code).get()
+        .then((doc) {
+          if(doc.exists) {
+            NaggapwamStaticId.citizenName = doc.get("firstname") + " " + doc.get("middlename") + " " + doc.get("lastname");
+          }
+          Navigator.of(context).pushNamedAndRemoveUntil("/healthDeclaration", (route) => true, arguments: null);
+      });
     });
   }
 

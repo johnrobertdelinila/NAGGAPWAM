@@ -102,6 +102,7 @@ class _PhoneAuthVerifyState extends State<PhoneAuthVerify> {
         setState(() {
           isLoading = false;
         });
+        addStringToSF("phone", "0" + phoneNumber);
         Navigator.of(context).pushNamedAndRemoveUntil("/thankYou", (route) => false);
       } catch (e) {
         String err = 'Verification code is invalid. Please be sure to enter the correct verification code or resend the verification code sms';

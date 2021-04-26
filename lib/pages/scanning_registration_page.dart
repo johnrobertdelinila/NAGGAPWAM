@@ -8,6 +8,7 @@ import 'package:covidcapstone/widgets/custom_scrollview_adaptive.dart';
 import 'package:covidcapstone/widgets/inputs/input_dropdown_adaptive.dart';
 import 'package:covidcapstone/widgets/inputs/text_field_adaptive.dart';
 import 'package:covidcapstone/widgets/scaffold_adaptive.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -166,29 +167,58 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
     }
 
     void insert() async {
+
+      AlertDialogAdaptive(
+        title: "Please wait",
+        barrierDismissible: false,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Creating you a NAGGAPWAM Scanning Point account."),
+            Padding(
+              padding: EdgeInsets.only(top: 15),
+              child: (isIos ? CupertinoActivityIndicator(
+                animating: true,
+                radius: 20,
+              ) : CircularProgressIndicator()),
+            )
+          ],
+        ),
+        buttons: [],
+      ).show(context);
+
       final firestoreReference = FirebaseFirestore.instance;
       final scanningPoints = firestoreReference.collection("scanning_points");
 
-      DocumentReference refScanning = await scanningPoints.add(_scanningPoint.toJson());
-      Navigator.of(context).pop();
+      FirebaseAuth.instance.createUserWithEmailAndPassword(email: _scanningPoint.username, password: _scanningPoint.password)
+        .then((value) async {
 
-      AlertDialogAdaptive(
-        title: "Registration",
-        content: Text("Your registration has been successful. We will send you email for the Admin confirmation. Thank you"),
-        buttons: [
-          {
-            "text": "Okay",
-            "action": (){
-              Navigator.pop(context);
-              if(kIsWeb) {
-                Navigator.of(context).pushNamedAndRemoveUntil("/landing", (route) => false);
-              }else {
-                Navigator.of(context).pushNamedAndRemoveUntil("/homePage", (route) => false);
-              }
-            }
-          },
-        ],
-      ).show(context);
+          Navigator.of(context).pop();
+
+          await scanningPoints.doc(value.user.uid).set(_scanningPoint.toJson());
+
+          AlertDialogAdaptive(
+            title: "Registration",
+            content: Text("Your registration has been successful. We will send you email for the Admin confirmation. Thank you"),
+            buttons: [
+              {
+                "text": "Okay",
+                "action": (){
+                  Navigator.pop(context);
+                  if(kIsWeb) {
+                    Navigator.of(context).pushNamedAndRemoveUntil("/landing", (route) => false);
+                  }else {
+                    Navigator.of(context).pushNamedAndRemoveUntil("/homePage", (route) => false);
+                  }
+                }
+              },
+            ],
+          ).show(context);
+
+      })
+      .catchError((error) => print(error));
+
+
 
     }
 

@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
-class ThankYouPage extends StatelessWidget {
+class ConfirmSuccess extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScaffoldAdaptive(
@@ -16,8 +16,15 @@ class ThankYouPage extends StatelessWidget {
           child: Column(
             children: [
               Container(
-                color: mainColor.withOpacity(0.2),
-                child: Lottie.asset('assets/lotties/thank_you.json'),
+                color: Colors.red.withOpacity(0.8),
+                width: double.infinity,
+                child: Padding(
+                  padding: EdgeInsets.all(30),
+                    child: Text("Your Reported that you\ntested positive for\nCOVID-19", style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600
+                    ),)),
               ),
               Container(
                 margin: EdgeInsets.only(left: 20, right: 20),
@@ -27,23 +34,15 @@ class ThankYouPage extends StatelessWidget {
                     SizedBox(
                       height: 20,
                     ),
+                    Container(
+                      child: Image.asset("assets/hero_woman.png"),
+                      width: MediaQuery.of(context).size.width*0.6,
+                      height: MediaQuery.of(context).size.height * 0.5,
+                    ),
                     Text(
-                      "You’re all set!",
+                      "Thank you for helping your community stay safe, anonymously.",
                       style: kMainTitleStyle,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Text(
-                      "Thanks for downloading and using Naggapwam app to " + tagline.toLowerCase() + ". You will be notified of potential exposure to COVID-19.",
-                      style: kMainTextStyle,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Text(
-                      subTagline + ".",
-                      style: kMainTextStyle,
+                      textAlign: TextAlign.center,
                     ),
                     SizedBox(
                       height: 20,
@@ -52,7 +51,7 @@ class ThankYouPage extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(12.0, 28.0, 12.0, 0.0),
                         child: FilledButtonAdaptive(
-                          text: "Finish",
+                          text: "SHARE THE APP",
                           tapEvent: (){
                             Navigator.of(context).pushNamedAndRemoveUntil("/homePage", (_) => false);
                           },
@@ -61,6 +60,12 @@ class ThankYouPage extends StatelessWidget {
                       ),
                       margin: EdgeInsets.only(bottom: 20),
                     ),
+                    Text(
+                      "Your identity will always remain anonymous.",
+                      style: kMainTextStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 10,)
                   ],
                 ),
               )

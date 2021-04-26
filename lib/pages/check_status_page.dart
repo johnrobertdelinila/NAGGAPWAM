@@ -134,9 +134,9 @@ class CheckStatusPageState extends State<CheckStatusPage> {
                       final Citizen _citizen = Citizen();
                       _citizen.fromSnapshot(snapshot);
                       Navigator.of(context).pushNamed("/successPage", arguments: {
-                        "name": QrRegistrationPage().capitalize(_citizen.firstname) + " " +
-                            QrRegistrationPage().capitalize(_citizen.middlename.substring(0, 1)) + ". " +
-                            QrRegistrationPage().capitalize(_citizen.lastname),
+                        "name": capitalize(_citizen.firstname) + " " +
+                            capitalize(_citizen.middlename.substring(0, 1)) + ". " +
+                            capitalize(_citizen.lastname),
                         "address": _citizen.barangay,
                         "id_number": _citizen.id,
                         "isChecking": true

@@ -64,22 +64,25 @@ class ActionSheetAdaptive extends StatelessWidget {
         actions: actions
       );
     }else {
-      return Container(
-        padding: EdgeInsets.all(20),
-        height: 170,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: TextStyle(fontSize: 16, color: kTextColor, fontWeight: FontWeight.w600)),
-            SizedBox(height: 5,),
-            Text(message, style: TextStyle(fontSize: 14, color: kTextColor)),
-            SizedBox(height: 10,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: actions
-            )
-          ],
-        ),
+      return Wrap(
+        children: [
+          Container(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontSize: 16, color: kTextColor, fontWeight: FontWeight.w600)),
+                SizedBox(height: 5,),
+                Text(message, style: TextStyle(fontSize: 14, color: kTextColor)),
+                SizedBox(height: 10,),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: actions
+                )
+              ],
+            ),
+          )
+        ],
       );
     }
   }

@@ -34,8 +34,8 @@ class _SignInState extends State<SignIn> {
   Widget build(BuildContext context) {
 
     if(!kIsWeb) {
-      FlutterStatusbarcolor.setStatusBarColor(mainColor);
-      FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
+      // FlutterStatusbarcolor.setStatusBarColor(mainColor);
+      // FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
     }
 
     double height = MediaQuery.of(context).size.height;
@@ -68,7 +68,7 @@ class _SignInState extends State<SignIn> {
                   ),
                   //Todo: Add On Pop Methods Here
                   onPressed: () {
-                    print('Add On Pop Methods Here');
+                    Navigator.of(context).pop();
                   },
                 ),
               ),

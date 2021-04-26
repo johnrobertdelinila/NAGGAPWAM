@@ -12,6 +12,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:image_downloader/image_downloader.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -49,6 +50,10 @@ class SuccessPageState extends State<SuccessPage> {
     }
 
     Map<String, dynamic> finalArguments = this.arguments;
+
+    if(finalArguments["isChecking"] == null || finalArguments["isChecking"] == false) {
+      addStringToSF("id_number", finalArguments["id_number"].toString());
+    }
 
     Widget cBorder({bool top = false, bool left = false, bool bottom = false, bool right = false}) {
       Color color = mainColor;
@@ -322,7 +327,25 @@ class SuccessPageState extends State<SuccessPage> {
                       Text(finalArguments["isChecking"] == null ? "Registration Successful!" : "Status", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800), textAlign: TextAlign.center,),
                       SizedBox(height: 10,),
                       Text("NAGGAPWAM ID Number:", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),),
-                      Text(finalArguments["id_number"].toString().toUpperCase(), style: TextStyle(color: darkColor, fontSize: 16, fontWeight: FontWeight.w500),),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(finalArguments["id_number"].toString().toUpperCase(), style: TextStyle(color: darkColor, fontSize: 16, fontWeight: FontWeight.w500),),
+                          IconButton(icon: Icon(isIos ? CupertinoIcons.doc_on_clipboard : Icons.copy), color: mainColor, onPressed: () {
+                            Clipboard.setData(new ClipboardData(text: finalArguments["id_number"]));
+                            AlertDialogAdaptive(
+                              title: "Naggapwam ID",
+                              content: Text("ID Copied to clipboard"),
+                              buttons: [
+                                {
+                                  "text": "Done",
+                                  "action": () => Navigator.pop(context)
+                                },
+                              ],
+                            ).show(context);
+                          })
+                        ],
+                      ),
                       SizedBox(height: 25,),
                       Wrap(
                         alignment: WrapAlignment.center,

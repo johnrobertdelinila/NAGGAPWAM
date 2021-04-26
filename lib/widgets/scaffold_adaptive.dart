@@ -1,14 +1,20 @@
 
 
-import 'package:covidcapstone/Pages/bluetooth_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:covidcapstone/Pages/more_page.dart';
 import 'package:covidcapstone/Pages/qr_page.dart';
-import 'package:covidcapstone/Services/constants.dart';
 import 'package:covidcapstone/Widgets/navigation_bar_items.dart';
+import 'package:covidcapstone/pages/bluetooth_page.dart';
+import 'package:covidcapstone/services/constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show TargetPlatform;
 import 'package:flutter/material.dart';
-import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
+import 'package:flutter/foundation.dart' as foundation;
+
+import 'alertdialog_adaptive.dart';
+import 'inputs/text_field_adaptive.dart';
+
+bool get isIoss => foundation.defaultTargetPlatform == foundation.TargetPlatform.iOS;
 
 class ScaffoldAdaptive extends StatefulWidget {
 
@@ -43,12 +49,55 @@ class _ScaffoldAdaptiveState extends State<ScaffoldAdaptive> {
   @override
   Widget build(BuildContext context) {
 
+    TextEditingController temp = TextEditingController();
+
+    var fabTxt = "Temperature";
+    var fab = FloatingActionButton.extended(
+      onPressed: () {
+        AlertDialogAdaptive(
+          title: "Temperature",
+          content: TextFieldAdaptive(
+            placeHolder: "Temperature",
+            textInputType: TextInputType.number,
+            preController: temp,
+          ),
+          buttons: [
+            {
+              "text": "Done",
+              "action": () async {
+                Navigator.pop(context);
+                String id_number = await getStringValuesSF("id_number");
+                if(temp.text != null && temp.text.length > 1) {
+                  FirebaseFirestore.instance.collection("hdf").doc(id_number).update({
+                    "temperature": temp.text
+                  });
+                }
+              }
+            },
+          ],
+        ).show(context);
+      },
+      label: Text(isIoss ? fabTxt : fabTxt.toUpperCase()),
+      icon: Icon(isIoss ? CupertinoIcons.thermometer : Icons.thermostat_outlined),
+      backgroundColor: isIoss ? CupertinoColors.systemPurple : Colors.purple,
+    );
+
     var platform = Theme.of(context).platform;
     if(platform == TargetPlatform.android) {
       return Scaffold(
         key: widget.scaffoldKey,
         backgroundColor: widget.backgroundColor != null ? widget.backgroundColor : null,
         body: widget.isIncludeBottomBarAndroid ? tabs[currentTabIndex] : widget.child,
+        floatingActionButton: widget.isIncludeBottomBarAndroid ? FutureBuilder(
+          future: getStringValuesSF("id_number"),
+          builder: (context, snap) {
+            if(snap.hasData && snap.data != null) {
+              return fab;
+            }else {
+                return SizedBox();
+            }
+          },
+        ) : null,
         bottomNavigationBar: widget.isIncludeBottomBarAndroid == null || !widget.isIncludeBottomBarAndroid ?
           null :
           BottomNavigationBar(
@@ -69,6 +118,16 @@ class _ScaffoldAdaptiveState extends State<ScaffoldAdaptive> {
       return Scaffold(
         key: widget.scaffoldKey,
         backgroundColor: widget.backgroundColor != null ? widget.backgroundColor : null,
+        floatingActionButton: widget.isIncludeBottomBarAndroid ? FutureBuilder(
+          future: getStringValuesSF("id_number"),
+          builder: (context, snap) {
+            if(snap.hasData && snap.data != null) {
+              return Padding(padding: const EdgeInsets.only(bottom: 60.0), child: fab);
+            }else {
+              return SizedBox();
+            }
+          },
+        ): null,
         body: SafeArea(child: widget.child, bottom: (widget.isIncludeBottomBarAndroid == null ? true : false),),
       );
     }

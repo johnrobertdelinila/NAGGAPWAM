@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:covidcapstone/services/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flare_dart/math/mat2d.dart';
 import 'package:flare_dart/math/vec2d.dart';
@@ -123,23 +124,25 @@ class TeddyController extends FlareControls {
 
   // Todo: Implement Server side checking of email and password
   Future<bool> checkEmailPassword({@required String email, @required String password}) async {
-    await Future.delayed(Duration(seconds: 3));
-    if (password == "123456" && email == 'developer@gmail.com') {
-      play("success");
-      return true;
-    } else {
-      play("fail");
-      return false;
+    if(isDeveloping) {
+      await Future.delayed(Duration(seconds: 3));
+      if (password == "123456" && email == 'developer@gmail.com') {
+        play("success");
+        return true;
+      } else {
+        play("fail");
+        return false;
+      }
+    }else {
+      return FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)
+          .then((result) {
+        final User user = result.user;
+        return true;
+      })
+          .catchError((onError) {
+        return false;
+      });
     }
-
-    // return FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)
-    //   .then((result) {
-    //     final User user = result.user;
-    //     return true;
-    // })
-    // .catchError((onError) {
-    //     return false;
-    // });
 
   }
 }

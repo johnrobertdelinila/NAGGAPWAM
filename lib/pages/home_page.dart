@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage> {
 
     return ScaffoldAdaptive(
       child: widget.isIos ? iosPlatform() : androidPlatform(),
-      isIncludeBottomBarAndroid: widget.isIos ? false : true,
+      isIncludeBottomBarAndroid: true,
     );
   }
 

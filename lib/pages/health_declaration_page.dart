@@ -1,6 +1,9 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:covidcapstone/models/citizen.dart';
 import 'package:covidcapstone/models/health_declaration.dart';
+import 'package:covidcapstone/models/naggapwam_static_id.dart';
+import 'package:covidcapstone/models/scanned.dart';
 import 'package:covidcapstone/pages/qr_registration_page.dart';
 import 'package:covidcapstone/services/constants.dart';
 import 'package:covidcapstone/widgets/alertdialog_adaptive.dart';
@@ -11,10 +14,12 @@ import 'package:covidcapstone/widgets/inputs/checkbox_adaptive.dart';
 import 'package:covidcapstone/widgets/inputs/switch_adaptive.dart';
 import 'package:covidcapstone/widgets/inputs/text_field_adaptive.dart';
 import 'package:covidcapstone/widgets/scaffold_adaptive.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' as foundation;
+import 'package:jiffy/jiffy.dart';
 
 bool get isIos => foundation.defaultTargetPlatform == foundation.TargetPlatform.iOS;
 
@@ -37,7 +42,8 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
 
   HealthDeclaration _hdf;
   final _formKey;
-  final Citizen _citizen;
+  Citizen _citizen;
+  String id_number;
   HealthDeclarationPageState(this._formKey, this._hdf, this._citizen);
 
   @override
@@ -49,6 +55,22 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
       setState(() {});
     });
     controller.repeat(reverse: true);
+
+    if(_citizen == null && NaggapwamStaticId.id_number == null) {
+      getStringValuesSF("id_number")
+          .then((id_number) {
+        if(id_number != null) {
+          FirebaseFirestore.instance.collection("hdf").doc(id_number).get()
+              .then((doc) {
+            setState(() {
+              _hdf.fromSnapshot(doc);
+              _hdf.haveRead = true;
+            });
+          });
+        }
+      });
+    }
+
     super.initState();
   }
 
@@ -63,8 +85,14 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
       SwitchAdaptive(
         title: "Sore Throat",
         isOn: _hdf.isHaveSoreThroat,
-        onChanged: (value) => setState(()  => _hdf.isHaveSoreThroat = !_hdf.isHaveSoreThroat),
-        onTap: () => setState(() => _hdf.isHaveSoreThroat = !_hdf.isHaveSoreThroat),
+        onChanged: (value) => setState(() {
+          _hdf.isHaveSoreThroat = !_hdf.isHaveSoreThroat;
+          print("Changed");
+        }),
+        onTap: () => setState(() {
+          _hdf.isHaveSoreThroat = !_hdf.isHaveSoreThroat;
+          print("Tap");
+        }),
       ),
       SwitchAdaptive(
         title: "Body Pain",
@@ -141,12 +169,28 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
     ];
   }
 
+  void insertScannedHdf(String status) async {
+    Scanned scanned = Scanned();
+    scanned.id_number = NaggapwamStaticId.id_number;
+    scanned.status = status;
+    scanned.hdf = _hdf.toJson();
+    scanned.scanning_point_id = FirebaseAuth.instance.currentUser.uid;
+    await FirebaseFirestore.instance.collection("scanned").add(scanned.toJson()).catchError((onError) => print(onError));
+
+    NaggapwamStaticId.id_number = null;
+    NaggapwamStaticId.citizenName = null;
+    Navigator.of(context).pushNamedAndRemoveUntil("/scanAgain", (route) => false);
+  }
+
   Widget form(BoxConstraints constraints) {
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(
+            child: (NaggapwamStaticId.citizenName != null ? Text(NaggapwamStaticId.citizenName, style: kMainTextStyle,) : SizedBox()),
+          ),
           Text("Health Declaration Form", style: kSubtitleStyle,),
           SizedBox(height: 15,),
           layout(constraints, first()),
@@ -155,25 +199,69 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
           layout(constraints, fourth()),
           layout(constraints, fifth()),
           SizedBox(height: 25,),
-          Center(
+          (_citizen == null ? SizedBox() : Center(
             child: CheckboxAdaptive(
               title: "I have read and agree to the Terms, Conditions and Privacy Policy",
               isOn: _hdf.haveRead,
               onChanged: (value) => setState(()  => _hdf.haveRead = !_hdf.haveRead),
               onTap: () => setState(() => _hdf.haveRead = !_hdf.haveRead),
             ),
-          ),
-          Center(
+          )),
+          NaggapwamStaticId.id_number == null ? Center(
             child: TextButtonAdaptive(
                 text: "Terms, Conditions And Privacy Policy",
-                tapEvent: () {}
+                tapEvent: () => showTermsAndCondition(context)
             ),
-          ),
+          ) : SizedBox(),
+          (_citizen != null ? SizedBox() : Center(child: Text("Updated " + (_hdf.updatedOn != null ? Jiffy(_hdf.updatedOn.toDate()).fromNow() : "--")),)),
+          (NaggapwamStaticId.id_number == null ? SizedBox() : Center(child: Text("Temperature: " + (_hdf.temperature != null ? _hdf.temperature : "--")))),
           (!kIsWeb ?
           Padding(
             padding: EdgeInsets.only(top: 25),
             child: Center(
-              child: FilledButtonAdaptive(color: buttonColor, text: "Submit", tapEvent: () {
+              child: NaggapwamStaticId.id_number != null ? Column(
+                children: [
+                  ButtonTheme(
+                    minWidth: double.maxFinite,
+                    height: 58.0,
+                    child: OutlineButton(
+                      onPressed: () => insertScannedHdf("accepted"),
+                      borderSide: new BorderSide(
+                        width: 2.0,
+                        color: Colors.green
+                      ),
+                      shape: new RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(5.0)),
+                      child: Text(
+                        "Accept".toUpperCase(),
+                        style: Theme.of(context).textTheme.button.apply(
+                          color: Color(0xFF686868),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 15,),
+                  ButtonTheme(
+                    minWidth: double.maxFinite,
+                    height: 58.0,
+                    child: OutlineButton(
+                      onPressed: () => insertScannedHdf("rejected"),
+                      borderSide: new BorderSide(
+                        width: 2.0,
+                        color: Colors.red
+                      ),
+                      shape: new RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(5.0)),
+                      child: Text(
+                        "Reject".toUpperCase(),
+                        style: Theme.of(context).textTheme.button.apply(
+                          color: Color(0xFF686868),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ) : FilledButtonAdaptive(color: buttonColor, text: "Submit", tapEvent: () {
                 if (_formKey.currentState.validate()) {
                   if(!_hdf.haveRead) {
                     AlertDialogAdaptive(
@@ -187,25 +275,42 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
                       ],
                     ).show(context);
                   }else {
-                    AlertDialogAdaptive(
-                      title: "Please wait",
-                      barrierDismissible: false,
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text("Creating you a NAGGAPWAM QR Pass ID."),
-                          Padding(
-                            padding: EdgeInsets.only(top: 15),
-                            child: (isIos ? CupertinoActivityIndicator(
-                              animating: true,
-                              radius: 20,
-                            ) : CircularProgressIndicator()),
-                          )
+                    if(_citizen != null) {
+                      AlertDialogAdaptive(
+                        title: "Please wait",
+                        barrierDismissible: false,
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text("Creating you a NAGGAPWAM QR Pass ID."),
+                            Padding(
+                              padding: EdgeInsets.only(top: 15),
+                              child: (isIos ? CupertinoActivityIndicator(
+                                animating: true,
+                                radius: 20,
+                              ) : CircularProgressIndicator()),
+                            )
+                          ],
+                        ),
+                        buttons: [],
+                      ).show(context);
+                      QrRegistrationPage().insert(_citizen, _hdf, context);
+                    }else {
+                      QrRegistrationPage().update(_hdf, id_number);
+                      AlertDialogAdaptive(
+                        title: "Health Declaration",
+                        content: Text("Thank you for updating your Health Declaration Form!"),
+                        buttons: [
+                          {
+                            "text": "Done",
+                            "action": () {
+                              Navigator.pop(context);
+                              Navigator.of(context).pop();
+                            }
+                          },
                         ],
-                      ),
-                      buttons: [],
-                    ).show(context);
-                    QrRegistrationPage().insert(_citizen, _hdf, context);
+                      ).show(context);
+                    }
                   }
                 }
               }),
@@ -253,9 +358,35 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
     );
   }
 
+  FutureBuilder<DocumentSnapshot> fetchHdf(String id_number) {
+    return FutureBuilder(
+      future: FirebaseFirestore.instance.collection("hdf").doc(id_number).get(),
+      builder: (context, docSnapshot) {
+        if(docSnapshot.hasData) {
+          if(docSnapshot.hasError) {
+            return Center(
+              child: Text(docSnapshot.error.toString()),
+            );
+          }
+          if(NaggapwamStaticId.id_number != null) {
+            _hdf.fromSnapshot(docSnapshot.data);
+            _hdf.haveRead = true;
+          }
+          return layoutBuilder();
+        }else {
+          return Center(
+            child: (isIos ? CupertinoActivityIndicator(
+              animating: true,
+              radius: 20,
+            ) : CircularProgressIndicator()),
+          );
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-
     if(kIsWeb) {
       return layoutBuilder();
     }else {
@@ -263,13 +394,28 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
         isIncludeBottomBarAndroid: false,
         child: CustomScrollviewAdaptive(
           icon: SizedBox(),
-          title: "QR Pass Registration",
+          title: NaggapwamStaticId.id_number != null ? "QR Pass ID" : _citizen != null ? "QR Pass Registration" : "Update HDF",
           widgets: [
-            layoutBuilder()
+            (_citizen != null ? layoutBuilder() :
+              (NaggapwamStaticId.id_number != null ? fetchHdf(NaggapwamStaticId.id_number) : FutureBuilder(
+                future: getStringValuesSF("id_number"),
+                builder: (context, snap) {
+                  if(snap.hasData && snap.data != null) {
+                    id_number = snap.data.toString();
+                    return fetchHdf(snap.data.toString());
+                  }else {
+                    return Center(
+                      child: Text("Something went wrong"),
+                    );
+                  }
+                },
+              ))
+            )
           ],
         ),
       );
     }
   }
+
 
 }

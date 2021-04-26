@@ -57,7 +57,8 @@ class CustomScrollviewAdaptive
             snap: false,
             backgroundColor: kIsWeb ? navColor : backgroundColor,
             actions: [
-              icon
+              Padding(padding: EdgeInsets.only(right: 10),
+              child: icon)
             ],
             expandedHeight: 90,
             flexibleSpace: FlexibleSpaceBar(

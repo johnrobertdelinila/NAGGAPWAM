@@ -1,5 +1,7 @@
 
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ScanningPoint {
   String email, category, establishment, telephone, address, barangay, lastName, firstName, middleName, mobileNumber, username, password, confirmPassword;
 
@@ -25,6 +27,19 @@ class ScanningPoint {
       }
     }
     return false;
+  }
+
+  void fromSnapshot(DocumentSnapshot snapshot) {
+    Map<String, dynamic> data = snapshot.data();
+    this.email = data["email"];
+    this.category = data["category"];
+    this.establishment = data["establishment"];
+    this.telephone = data["telephone"];
+    this.address = data["address"];
+    this.barangay = data["barangay"];
+    this.lastName = data["lastName"];
+    this.middleName = data["middleName"];
+    this.firstName = data["firstName"];
   }
 
 }

@@ -39,7 +39,7 @@ class AlertDialogAdaptive extends StatelessWidget {
     if(buttons != null && buttons.length > 0) {
       for (var button in buttons) {
         if(isIos) {
-          actions.add(CupertinoDialogAction(onPressed: button["action"], child: Text(button["text"])));
+          actions.add(CupertinoDialogAction(onPressed: button["action"], child: Text(button["text"].toString().toUpperCase())));
         }else {
           actions.add(TextButtonAdaptive(text: button["text"], tapEvent: button["action"]));
         }

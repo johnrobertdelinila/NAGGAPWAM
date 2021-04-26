@@ -1,14 +1,20 @@
 
 
 import 'dart:ui';
+import 'package:covidcapstone/widgets/alertdialog_adaptive.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/foundation.dart' as foundation;
+import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 bool get isIos => foundation.defaultTargetPlatform == foundation.TargetPlatform.iOS;
 bool get isAndroid => foundation.defaultTargetPlatform == foundation.TargetPlatform.android;
 final bool isDeveloping = false;
+
 
 final Color backgroundColor = Color(0xFFFAFAFA);
 final Color mainColor = Color(0xFF475df3);
@@ -19,6 +25,9 @@ const kTextColor = Color(0XFF282828);
 
 final double borderRadius = kIsWeb ? 20.0 : 14.0;
 final double elevation = 0;
+
+final String terms = "https://naggapwam.flycricket.io/terms.html";
+final String privacy = "https://naggapwam.flycricket.io/privacy.html";
 
 final MaterialColor appColor = MaterialColor(
   Color.fromRGBO(44, 48, 84, 1.0).value,
@@ -110,3 +119,41 @@ void showSnackBar(String title, GlobalKey<ScaffoldState> _scaffoldKey) => _scaff
     content: Text(title, textAlign: (isIos ? TextAlign.center : TextAlign.start)),
   ),
 );
+
+onShareWithEmptyOrigin() async {
+  await Share.share(tagline + ". " + subTagline + ".\n\nApp Link: naggapwam-covid-tracing.web.app");
+}
+
+addStringToSF(String key, String value) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setString(key, value);
+}
+
+Future<dynamic> getStringValuesSF(String key) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String stringValue = prefs.getString(key);
+  return stringValue;
+}
+
+String capitalize(String str) {
+  return "${str[0].toUpperCase()}${str.substring(1)}";
+}
+
+void showTermsAndCondition(BuildContext context) {
+  if(kIsWeb) {
+    canLaunch(terms);
+  }else {
+    AlertDialogAdaptive(
+      title: "Terms & Condition",
+      barrierDismissible: true,
+      content: Container(
+        child: InAppWebView(
+          initialUrlRequest: URLRequest(
+              url: Uri.parse(terms)
+          ),
+        ),
+      ),
+      buttons: [],
+    ).show(context);
+  }
+}

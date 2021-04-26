@@ -1,6 +1,7 @@
 
 import 'package:covidcapstone/Widgets/custom_scrollview_adaptive.dart';
 import 'package:covidcapstone/Widgets/icons.dart';
+import 'package:covidcapstone/pages/settings.dart';
 import 'package:covidcapstone/services/constants.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -12,6 +13,7 @@ class MorePage extends StatelessWidget {
     return CustomScrollviewAdaptive(
       icon: GestureDetector(child: notifOut, onTap: () => Navigator.of(context).pushNamed("/notification"),),
       widgets: [
+        SettingsPage(),
         Footer(isMobile: true,)
       ],
       title: navigations[2]
