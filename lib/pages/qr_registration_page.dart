@@ -67,7 +67,7 @@ class QrRegistrationPage extends StatelessWidget {
                     (kIsWeb ? Padding(
                       padding: EdgeInsets.only(top: 25, bottom: 25),
                       child: Center(
-                        child: FilledButtonAdaptive(color: buttonColor, text: "Submit Form", tapEvent: () {
+                        child: FilledButtonAdaptive(color: buttonColor, text: "Submit Form", tapEvent: () async {
                           if (_formKeyCitizen.currentState.validate() && _formKeyHdf.currentState.validate()) {
                             if(!_hdf.haveRead) {
                               AlertDialogAdaptive(
@@ -101,7 +101,33 @@ class QrRegistrationPage extends StatelessWidget {
                                 ),
                                 buttons: [],
                               ).show(context);
-                              insert(_citizen, _hdf, context);
+
+                              CollectionReference citizens = FirebaseFirestore.instance.collection("citizens");
+                              QuerySnapshot query = await citizens
+                                  .where("firstname", isEqualTo: _citizen.firstname)
+                                  .where("middlename", isEqualTo: _citizen.middlename)
+                                  .where("lastname", isEqualTo: _citizen.lastname)
+                                  .get();
+
+                              Navigator.of(context).pop();
+
+                              if(query.size > 0) {
+                                AlertDialogAdaptive(
+                                  title: "Duplicate Registration",
+                                  barrierDismissible: true,
+                                  content: Text("Existing registration found. Please contact the NAGGAPWAM HOTLINE or send your queries to NAGGAPWAM FB page."),
+                                  buttons: [
+                                    {
+                                      "text": "Okay",
+                                      "action": () {
+                                        Navigator.pop(context);
+                                      }
+                                    },
+                                  ],
+                                ).show(context);
+                              }else {
+                                insert(_citizen, _hdf, context);
+                              }
                             }
                           }
                         }),

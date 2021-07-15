@@ -25,9 +25,37 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
 
   final ScanningPoint _scanningPoint = ScanningPoint();
   final _formKey = GlobalKey<FormState>();
+  bool isShown = false;
 
   @override
   Widget build(BuildContext context) {
+
+    Future.delayed(Duration(milliseconds: 700), () {
+      if(!isShown) {
+        AlertDialogAdaptive(
+          title: "Important Notice",
+          barrierDismissible: true,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(isIos ? CupertinoIcons.info_circle : Icons.info_outline, size: 30,),
+              Text(disclaimer_registration + " Upon successful registration, you need to prepare the following to be submitted:\n1. Business Permit\n2. Valid ID(2)\n3. Phone number\n4. Email Address."),
+            ],
+          ),
+          buttons: [
+            {
+              "text": "Okay",
+              "action": () {
+                Navigator.pop(context);
+              }
+            },
+          ],
+        ).show(context);
+        setState(() {
+          isShown = true;
+        });
+      }
+    });
 
     Widget layout(BoxConstraints constraints, List<Widget> widgets) {
       if(constraints.maxWidth <= 600) {
@@ -69,7 +97,7 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
         ),
         TextFieldAdaptive(
             placeHolder: "Telephone Number",
-            textInputType: TextInputType.text,
+            textInputType: TextInputType.phone,
             validator: (value) => (value.isEmpty ? "This must not be empty" : null),
             selectedValue: _scanningPoint.telephone,
             onSaved: (val) => setState(() => _scanningPoint.telephone = val)
@@ -86,6 +114,13 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
 
     List<Widget> second() {
       return [
+        TextFieldAdaptive(
+            placeHolder: "Position",
+            textInputType: TextInputType.text,
+            validator: (value) => (value.isEmpty ? "This must not be empty" : null),
+            selectedValue: _scanningPoint.position,
+            onSaved: (val) => setState(() => _scanningPoint.position = val)
+        ),
         TextFieldAdaptive(
             placeHolder: "Street/Building Address",
             textInputType: TextInputType.text,
@@ -140,11 +175,30 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
       ];
     }
 
+    List<Widget> thirdPointFive() {
+      return [
+        TextFieldAdaptive(
+            placeHolder: "Contact Person",
+            textInputType: TextInputType.text,
+            validator: (value) => (value.isEmpty ? "This must not be empty" : null),
+            selectedValue: _scanningPoint.contactPerson,
+            onSaved: (val) => setState(() => _scanningPoint.contactPerson = val)
+        ),
+        TextFieldAdaptive(
+            placeHolder: "Contact Person Mobile Number",
+            textInputType: TextInputType.phone,
+            validator: (value) => (value.isEmpty ? "This must not be empty" : null),
+            selectedValue: _scanningPoint.contactPersonMobileNumber,
+            onSaved: (val) => setState(() => _scanningPoint.contactPersonMobileNumber = val)
+        ),
+      ];
+    }
+
     List<Widget> fourth() {
       return [
         TextFieldAdaptive(
-            placeHolder: "Username",
-            textInputType: TextInputType.text,
+            placeHolder: "Username(Email)",
+            textInputType: TextInputType.emailAddress,
             validator: (value) => (value.isEmpty ? "This must not be empty" : null),
             selectedValue: _scanningPoint.username,
             onSaved: (val) => setState(() => _scanningPoint.username = val)
@@ -189,12 +243,13 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
 
       final firestoreReference = FirebaseFirestore.instance;
       final scanningPoints = firestoreReference.collection("scanning_points");
+      final FirebaseAuth mAuth = FirebaseAuth.instance;
 
-      FirebaseAuth.instance.createUserWithEmailAndPassword(email: _scanningPoint.username, password: _scanningPoint.password)
+      mAuth.createUserWithEmailAndPassword(email: _scanningPoint.username, password: _scanningPoint.password)
         .then((value) async {
 
           Navigator.of(context).pop();
-
+          _scanningPoint.isVerified = false;
           await scanningPoints.doc(value.user.uid).set(_scanningPoint.toJson());
 
           AlertDialogAdaptive(
@@ -214,7 +269,7 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
               },
             ],
           ).show(context);
-
+          mAuth.signOut();
       })
       .catchError((error) => print(error));
 
@@ -241,6 +296,7 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
             ),
             SizedBox(height: 10,),
             layout(constraints, third()),
+            layout(constraints, thirdPointFive()),
             SizedBox(height: 25,),
             Divider(
               color: Colors.black38,
@@ -254,13 +310,15 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
             Center(
               child: FilledButtonAdaptive(color: buttonColor, text: "Submit Form", tapEvent: () {
                 if (_formKey.currentState.validate()) {
+                  _scanningPoint.isVerified = false;
                   if(isIos && _scanningPoint.notComplete()) {
+                    print(_scanningPoint.toJson().toString());
                     AlertDialogAdaptive(
                       title: "Incomplete",
                       content: Text("Please make sure to complete the Form to proceed."),
                       buttons: [
                         {
-                          "text": "Cancel",
+                          "text": "Okay",
                           "action": (){
                             Navigator.pop(context);
                           }
@@ -285,25 +343,6 @@ class ScanningRegistrationPageState extends State<ScanningRegistrationPage> {
                     ).show(context);
                     return false;
                   }
-
-                  AlertDialogAdaptive(
-                    title: "Please wait",
-                    barrierDismissible: false,
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text("Signing you up for QR Scanning Point."),
-                        Padding(
-                          padding: EdgeInsets.only(top: 15),
-                          child: (isIos ? CupertinoActivityIndicator(
-                            animating: true,
-                            radius: 20,
-                          ) : CircularProgressIndicator()),
-                        )
-                      ],
-                    ),
-                    buttons: [],
-                  ).show(context);
 
                   insert();
 

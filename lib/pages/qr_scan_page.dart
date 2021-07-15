@@ -5,10 +5,7 @@
 // import 'dart:ui' as ui;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:covidcapstone/models/citizen.dart';
-import 'package:covidcapstone/models/health_declaration.dart';
 import 'package:covidcapstone/models/naggapwam_static_id.dart';
-import 'package:covidcapstone/pages/health_declaration_page.dart';
 import 'package:covidcapstone/services/constants.dart';
 import 'package:covidcapstone/widgets/alertdialog_adaptive.dart';
 import 'package:covidcapstone/widgets/scaffold_adaptive.dart';

@@ -3,7 +3,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ScanningPoint {
-  String email, category, establishment, telephone, address, barangay, lastName, firstName, middleName, mobileNumber, username, password, confirmPassword;
+  bool isVerified;
+  String email, category, establishment, telephone, address, barangay, lastName, firstName, middleName, mobileNumber,
+      username, password, confirmPassword, position, contactPerson, contactPersonMobileNumber;
 
   Map<String, dynamic> toJson() =>
       {
@@ -17,7 +19,11 @@ class ScanningPoint {
         "firstName": firstName,
         "middleName": middleName,
         "username": username,
-        "password": password
+        "password": password,
+        "isVerified": isVerified,
+        "position": position,
+        "contactPerson": contactPerson,
+        "contactPersonMobileNumber": contactPersonMobileNumber
       };
 
   bool notComplete() {
@@ -40,6 +46,10 @@ class ScanningPoint {
     this.lastName = data["lastName"];
     this.middleName = data["middleName"];
     this.firstName = data["firstName"];
+    this.isVerified = data["isVerified"];
+    this.position = data["position"];
+    this.contactPerson = data["contactPerson"];
+    this.contactPersonMobileNumber = data["contactPersonMobileNumber"];
   }
 
 }

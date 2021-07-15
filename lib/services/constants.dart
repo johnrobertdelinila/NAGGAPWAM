@@ -83,7 +83,7 @@ final List<String> barangays = [
 ];
 
 final List<String> relationships = [
-  "Family", "Spouse", "Relative", "Friend", "Colleague", "Employer", "Neighbor", "Others"
+  "Father", "Mother", "Brother", "Sister", "Grandmother", "Grandfather", "Spouse", "Relative", "Friend", "Colleague", "Employer", "Neighbor", "Others"
 ];
 
 final List<String> categories = [
@@ -157,3 +157,12 @@ void showTermsAndCondition(BuildContext context) {
     ).show(context);
   }
 }
+
+const disclaimer_registration = "Please register ONLY ONCE and wait to get verified. Information must be truthful and reviewed carefully before submission. "
+    "This app supports contact tracing while maintaining privacy. Your identity will never be revealed to other app users.";
+
+const acquisition = "Once the Developer gives the work product to the Client, the Developer does not have rights to it, "
+    "except those that the Client explicitly gives the Developer here. The Client gives the Developer permission to use the "
+    "work product as part of the Developers portfolio and websites, in galleries, and in other media, "
+    "so long as is to showcase the Developers work and not for any other purpose. The Developer is not allowed to sell or otherwise use the work product to make money or for any other commercial"
+    "use. The Client is not allowed to take back this license, even after the Contract ends.";

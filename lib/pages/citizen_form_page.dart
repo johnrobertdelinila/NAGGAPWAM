@@ -1,4 +1,5 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:covidcapstone/models/citizen.dart';
 import 'package:covidcapstone/services/constants.dart';
 import 'package:covidcapstone/widgets/alertdialog_adaptive.dart';
@@ -29,6 +30,7 @@ class CitizenFormPageState extends State<CitizenFormPage> {
   final _formKey;
   Citizen _citizen;
   CitizenFormPageState(this._citizen, this._formKey);
+  bool isShown = false;
 
   void callbackDate(DateTime datePicked) {
     setState(() => this._citizen.birthday = datePicked);
@@ -41,6 +43,33 @@ class CitizenFormPageState extends State<CitizenFormPage> {
       DateTime now = DateTime.now();
       this._citizen.birthday = DateTime(now.year, now.month, now.day);
     }
+
+    Future.delayed(Duration(milliseconds: 700), () {
+      if(!isShown) {
+        AlertDialogAdaptive(
+          title: "Notice",
+          barrierDismissible: true,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(isIos ? CupertinoIcons.info_circle : Icons.info_outline, size: 30,),
+              Text(disclaimer_registration.replaceAll(" and wait to get verified", "")),
+            ],
+          ),
+          buttons: [
+            {
+              "text": "Okay",
+              "action": () {
+                Navigator.pop(context);
+              }
+            },
+          ],
+        ).show(context);
+        setState(() {
+          isShown = true;
+        });
+      }
+    });
 
     List<Widget> first() {
       return [
@@ -197,7 +226,7 @@ class CitizenFormPageState extends State<CitizenFormPage> {
               Padding(
                 padding: EdgeInsets.only(top: 25),
                 child: Center(
-                  child: FilledButtonAdaptive(color: buttonColor, text: "Continue", tapEvent: () {
+                  child: FilledButtonAdaptive(color: buttonColor, text: "Continue", tapEvent: () async {
 
                     if(isIos && _citizen.notComplete()) {
                       AlertDialogAdaptive(
@@ -216,8 +245,51 @@ class CitizenFormPageState extends State<CitizenFormPage> {
                     }
 
                     if (_formKey.currentState.validate()) {
-                      print(_citizen.firstname);
-                      Navigator.of(context).pushNamed("/healthDeclaration", arguments: _citizen);
+
+                      AlertDialogAdaptive(
+                        title: "Please wait",
+                        barrierDismissible: false,
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(top: 15),
+                              child: (isIos ? CupertinoActivityIndicator(
+                                animating: true,
+                                radius: 20,
+                              ) : CircularProgressIndicator()),
+                            )
+                          ],
+                        ),
+                        buttons: [],
+                      ).show(context);
+                      
+                      CollectionReference citizens = FirebaseFirestore.instance.collection("citizens");
+                      QuerySnapshot query = await citizens
+                        .where("firstname", isEqualTo: _citizen.firstname)
+                        .where("middlename", isEqualTo: _citizen.middlename)
+                        .where("lastname", isEqualTo: _citizen.lastname)
+                        .get();
+
+                      Navigator.of(context).pop();
+
+                      if(query.size > 0) {
+                        AlertDialogAdaptive(
+                          title: "Duplicate Registration",
+                          barrierDismissible: true,
+                          content: Text("Existing registration found. Please contact the NAGGAPWAM HOTLINE or send your queries to NAGGAPWAM FB page."),
+                          buttons: [
+                            {
+                              "text": "Okay",
+                              "action": () {
+                                Navigator.pop(context);
+                              }
+                            },
+                          ],
+                        ).show(context);
+                      }else {
+                        Navigator.of(context).pushNamed("/healthDeclaration", arguments: _citizen);
+                      }
                     }
 
                   }),

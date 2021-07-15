@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:covidcapstone/services/constants.dart';
 import 'package:covidcapstone/widgets/alertdialog_adaptive.dart';
 import 'package:covidcapstone/widgets/buttons/filled_button_adaptive.dart';
@@ -37,7 +38,7 @@ class SuccessPageState extends State<SuccessPage> {
   SuccessPageState(this.arguments);
 
   final GlobalKey _globalKey = new GlobalKey();
-  final String fileName = appName + "_Pass_ID.png";
+  String fileName = "_Pass_ID.png";
 
   bool loading = false, isDownloaded = false;
   Uint8List qrCache;
@@ -54,6 +55,7 @@ class SuccessPageState extends State<SuccessPage> {
     if(finalArguments["isChecking"] == null || finalArguments["isChecking"] == false) {
       addStringToSF("id_number", finalArguments["id_number"].toString());
     }
+    fileName = finalArguments["id_number"].toString() + "_Pass_ID.png";
 
     Widget cBorder({bool top = false, bool left = false, bool bottom = false, bool right = false}) {
       Color color = mainColor;
@@ -151,6 +153,13 @@ class SuccessPageState extends State<SuccessPage> {
       final TaskSnapshot taskSnapshot = await uploadTask;
       final url = await taskSnapshot.ref.getDownloadURL();
       print("Done: $url");
+
+      final firestoreReference = FirebaseFirestore.instance;
+      final citizens = firestoreReference.collection("citizens");
+      await citizens.doc(finalArguments["id_number"].toString()).update({
+        "qr_pass_url": url
+      });
+
       return url;
     }
 
@@ -305,6 +314,25 @@ class SuccessPageState extends State<SuccessPage> {
       finalUpload();
     }
 
+    bool isNumeric(String s) {
+      if (s == null) {
+        return false;
+      }
+      return double.tryParse(s) != null;
+    }
+
+    String convertFirestoreId(String firestoreId) {
+      String result = "";
+      firestoreId.substring(0, 4).split('').forEach((element) {
+        if(isNumeric(element)) {
+          result += element;
+        }else {
+          result += (element.codeUnitAt(0)).toString();
+        }
+      });
+      return result;
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return ScaffoldAdaptive(
@@ -330,9 +358,9 @@ class SuccessPageState extends State<SuccessPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(finalArguments["id_number"].toString().toUpperCase(), style: TextStyle(color: darkColor, fontSize: 16, fontWeight: FontWeight.w500),),
+                          Text(convertFirestoreId(finalArguments["id_number"].toString()), style: TextStyle(color: darkColor, fontSize: 16, fontWeight: FontWeight.w500),),
                           IconButton(icon: Icon(isIos ? CupertinoIcons.doc_on_clipboard : Icons.copy), color: mainColor, onPressed: () {
-                            Clipboard.setData(new ClipboardData(text: finalArguments["id_number"]));
+                            Clipboard.setData(new ClipboardData(text: convertFirestoreId(finalArguments["id_number"].toString())));
                             AlertDialogAdaptive(
                               title: "Naggapwam ID",
                               content: Text("ID Copied to clipboard"),
@@ -397,7 +425,30 @@ class SuccessPageState extends State<SuccessPage> {
                         ),
                       ),
                       SizedBox(height: 10,),
-                      FilledButtonAdaptive(text: "Done", tapEvent: () {
+                      FilledButtonAdaptive(text: "Done", tapEvent: () async {
+
+                        if(finalArguments["isChecking"] == null) {
+                          AlertDialogAdaptive(
+                            title: "Please wait",
+                            barrierDismissible: false,
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(top: 15),
+                                  child: (isIos ? CupertinoActivityIndicator(
+                                    animating: true,
+                                    radius: 20,
+                                  ) : CircularProgressIndicator()),
+                                )
+                              ],
+                            ),
+                            buttons: [],
+                          ).show(context);
+
+                          await uploadFile(qrCache == null ? await _captureQRPass() : qrCache);
+                        }
+
                         if(kIsWeb) {
                           Navigator.of(context).pushNamedAndRemoveUntil('/landing', (route) => false);
                         }else {

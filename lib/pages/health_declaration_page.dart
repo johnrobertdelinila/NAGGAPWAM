@@ -44,6 +44,8 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
   final _formKey;
   Citizen _citizen;
   String id_number;
+  TextEditingController temp = TextEditingController();
+
   HealthDeclarationPageState(this._formKey, this._hdf, this._citizen);
 
   @override
@@ -146,7 +148,7 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
         onTap: () => setState(() => _hdf.isTravelledOutside = !_hdf.isTravelledOutside),
       ),
       SwitchAdaptive(
-        title: "Travelled to any area in NCR aside from home:",
+        title: "Travelled to any High Risk Area aside from home:",
         isOn: _hdf.isTravelledNCR,
         onChanged: (value) => setState(()  => _hdf.isTravelledNCR = !_hdf.isTravelledNCR),
         onTap: () => setState(() => _hdf.isTravelledNCR = !_hdf.isTravelledNCR),
@@ -159,7 +161,7 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
       Padding(
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: TextFieldAdaptive(
-            placeHolder: "Travelled area in NCR",
+            placeHolder: "Travelled High Risk Area",
             textInputType: TextInputType.text,
             validator: (value) => null,
             selectedValue: _hdf.travelledArea,
@@ -173,6 +175,7 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
     Scanned scanned = Scanned();
     scanned.id_number = NaggapwamStaticId.id_number;
     scanned.status = status;
+    _hdf.temperature = temp.text;
     scanned.hdf = _hdf.toJson();
     scanned.scanning_point_id = FirebaseAuth.instance.currentUser.uid;
     await FirebaseFirestore.instance.collection("scanned").add(scanned.toJson()).catchError((onError) => print(onError));
@@ -225,10 +228,48 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
                     minWidth: double.maxFinite,
                     height: 58.0,
                     child: OutlineButton(
-                      onPressed: () => insertScannedHdf("accepted"),
+                      onPressed: () {
+                        AlertDialogAdaptive(
+                          title: "Temperature",
+                          content: TextFieldAdaptive(
+                            placeHolder: "Temperature",
+                            textInputType: TextInputType.number,
+                            preController: temp,
+                          ),
+                          buttons: [
+                            {
+                              "text": "Done",
+                              "action": () async {
+                                Navigator.pop(context);
+                                // String id_number = await getStringValuesSF("id_number");
+                                if(temp.text != null && temp.text.length > 1) {
+                                  if(int.parse(temp.text) > 37.5) {
+                                    AlertDialogAdaptive(
+                                      title: "High Temperature",
+                                      barrierDismissible: false,
+                                      content: Text("This citizen have a high temperature."),
+                                      buttons: [
+                                        {
+                                          "text": "Okay",
+                                          "action": () {
+                                            // Navigator.pop(context);
+                                            insertScannedHdf("accepted");
+                                          }
+                                        },
+                                      ],
+                                    ).show(context);
+                                  }else {
+                                    insertScannedHdf("accepted");
+                                  }
+                                }
+                              }
+                            },
+                          ],
+                        ).show(context);
+                      },
                       borderSide: new BorderSide(
-                        width: 2.0,
-                        color: Colors.green
+                          width: 2.0,
+                          color: Colors.green
                       ),
                       shape: new RoundedRectangleBorder(
                           borderRadius: new BorderRadius.circular(5.0)),
@@ -241,21 +282,24 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
                     ),
                   ),
                   SizedBox(height: 15,),
-                  ButtonTheme(
-                    minWidth: double.maxFinite,
-                    height: 58.0,
-                    child: OutlineButton(
-                      onPressed: () => insertScannedHdf("rejected"),
-                      borderSide: new BorderSide(
-                        width: 2.0,
-                        color: Colors.red
-                      ),
-                      shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(5.0)),
-                      child: Text(
-                        "Reject".toUpperCase(),
-                        style: Theme.of(context).textTheme.button.apply(
-                          color: Color(0xFF686868),
+                  Visibility(
+                    visible: false,
+                    child: ButtonTheme(
+                      minWidth: double.maxFinite,
+                      height: 58.0,
+                      child: OutlineButton(
+                        onPressed: () => insertScannedHdf("rejected"),
+                        borderSide: new BorderSide(
+                            width: 2.0,
+                            color: Colors.red
+                        ),
+                        shape: new RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(5.0)),
+                        child: Text(
+                          "Reject".toUpperCase(),
+                          style: Theme.of(context).textTheme.button.apply(
+                            color: Color(0xFF686868),
+                          ),
                         ),
                       ),
                     ),
@@ -397,19 +441,19 @@ class HealthDeclarationPageState extends State<HealthDeclarationPage> with Ticke
           title: NaggapwamStaticId.id_number != null ? "QR Pass ID" : _citizen != null ? "QR Pass Registration" : "Update HDF",
           widgets: [
             (_citizen != null ? layoutBuilder() :
-              (NaggapwamStaticId.id_number != null ? fetchHdf(NaggapwamStaticId.id_number) : FutureBuilder(
-                future: getStringValuesSF("id_number"),
-                builder: (context, snap) {
-                  if(snap.hasData && snap.data != null) {
-                    id_number = snap.data.toString();
-                    return fetchHdf(snap.data.toString());
-                  }else {
-                    return Center(
-                      child: Text("Something went wrong"),
-                    );
-                  }
-                },
-              ))
+            (NaggapwamStaticId.id_number != null ? fetchHdf(NaggapwamStaticId.id_number) : FutureBuilder(
+              future: getStringValuesSF("id_number"),
+              builder: (context, snap) {
+                if(snap.hasData && snap.data != null) {
+                  id_number = snap.data.toString();
+                  return fetchHdf(snap.data.toString());
+                }else {
+                  return Center(
+                    child: Text("Something went wrong"),
+                  );
+                }
+              },
+            ))
             )
           ],
         ),

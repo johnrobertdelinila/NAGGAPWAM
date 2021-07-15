@@ -62,6 +62,8 @@ dependencies:
   share: ^2.0.1
   shared_preferences: ^2.0.5
   flutter_inappwebview: ^5.3.2
+  image_picker: 0.6.2
+  toast: ^0.1.5
 
 dev_dependencies:
   flutter_test:

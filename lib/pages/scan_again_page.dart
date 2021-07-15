@@ -76,54 +76,45 @@ class ScanAgainPage extends StatelessWidget {
     }
 
     Widget buildTable() {
-      return FutureBuilder(
-          future: getStringValuesSF("id_number"),
+      return StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection("scanned")
+              .where("scanning_point_id", isEqualTo: FirebaseAuth.instance.currentUser.uid)
+              .orderBy("timestamp", descending: true).snapshots(),
           builder: (context, snap) {
-            if(snap.hasData) {
-              if(snap.data != null) {
-                return StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance.collection("scanned").where("scanning_point_id", isEqualTo: FirebaseAuth.instance.currentUser.uid).orderBy("timestamp").snapshots(),
-                    builder: (context, snap) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          columns: const <DataColumn>[
-                            DataColumn(
-                              label: Text(
-                                'Date',
-                                style: TextStyle(fontStyle: FontStyle.italic),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'ID',
-                                style: TextStyle(fontStyle: FontStyle.italic),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'Status',
-                                style: TextStyle(fontStyle: FontStyle.italic),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'Temperature',
-                                style: TextStyle(fontStyle: FontStyle.italic),
-                              ),
-                            ),
-                          ],
-                          rows: _createRows(snap.data),
-                        ),
-                      );
-                    }
-                );
-              }else {
-                return Center(child: Text("Loading"));
-              }
-            }else {
-              return Center(child: Text("Loading"));
-            }
+            return Scrollbar(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: const <DataColumn>[
+                    DataColumn(
+                      label: Text(
+                        'Date',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'ID',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'Status',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'Temperature',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ],
+                  rows: _createRows(snap.data),
+                ),
+              ),
+            );
           }
       );
     }

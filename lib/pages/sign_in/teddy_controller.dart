@@ -1,6 +1,9 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:covidcapstone/models/citizen.dart';
+import 'package:covidcapstone/models/scanning_point.dart';
 import 'package:covidcapstone/services/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flare_dart/math/mat2d.dart';
@@ -137,9 +140,25 @@ class TeddyController extends FlareControls {
       return FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)
           .then((result) {
         final User user = result.user;
-        return true;
-      })
+
+        return FirebaseFirestore.instance.collection("scanning_points").doc(user.uid).get()
+          .then((doc) {
+            if(!doc.exists) {
+              return false;
+            }
+            ScanningPoint scanningPoint = ScanningPoint();
+            scanningPoint.fromSnapshot(doc);
+            if(scanningPoint != null && scanningPoint.isVerified) {
+              return true;
+            }else {
+              return false;
+            }
+          })
           .catchError((onError) {
+            return false;
+          });
+
+      }).catchError((onError) {
         return false;
       });
     }

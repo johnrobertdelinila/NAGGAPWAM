@@ -103,7 +103,7 @@ class TestReportView extends StatelessWidget {
               child: Text(
                 "YES, Tested Positive".toUpperCase(),
                 style: Theme.of(context).textTheme.button.apply(
-                      color: Color(0xFF686868),
+                      color: Color(0xFF686868)
                     ),
               ),
             ),

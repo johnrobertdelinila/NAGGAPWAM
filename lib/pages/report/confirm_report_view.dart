@@ -1,24 +1,60 @@
 
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:covidcapstone/services/constants.dart';
+import 'package:covidcapstone/widgets/action_sheet_adaptive.dart';
+import 'package:covidcapstone/widgets/alertdialog_adaptive.dart';
+import 'package:covidcapstone/widgets/buttons/text_button_adaptive.dart';
 import 'package:covidcapstone/widgets/scrollbar_adaptive.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:slide_to_confirm/slide_to_confirm.dart';
 import 'package:stacked/stacked.dart';
+import 'package:toast/toast.dart';
 
 import 'confirm_report_view_model.dart';
 
-class ConfirmReportView extends StatelessWidget {
-  const ConfirmReportView({Key key}) : super(key: key);
+import 'package:flutter/foundation.dart' as foundation;
+
+bool get isIosss => foundation.defaultTargetPlatform == foundation.TargetPlatform.iOS;
+
+class ConfirmReportView extends StatefulWidget {
+  ConfirmReportViewState createState() => ConfirmReportViewState();
+}
+
+
+class ConfirmReportViewState extends State<ConfirmReportView> {
+
+  File selectedImage;
 
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder.reactive(
       builder: (context, model, child) => MaterialApp(
         builder: (context, widget) {
+
+          Future getImageFromCamera() async {
+            File image = await ImagePicker.pickImage(
+                source: ImageSource.camera, imageQuality: 30);
+            setState(() {
+              selectedImage = image;
+            });
+            Navigator.pop(context);
+          }
+
+          Future getImageFromGallery() async {
+            File image = await ImagePicker.pickImage(
+                source: ImageSource.gallery, imageQuality: 30);
+            setState(() {
+              selectedImage = image;
+            });
+            Navigator.pop(context);
+          }
+
           return Scaffold(
             appBar: AppBar(
                 backgroundColor: Colors.transparent,
@@ -36,7 +72,7 @@ class ConfirmReportView extends StatelessWidget {
                 actions: <Widget>[
                   // action button
                   IconButton(
-                    icon: Icon(isIos ? CupertinoIcons.clear : Icons.close),
+                    icon: Icon(isIosss ? CupertinoIcons.clear : Icons.close),
                     color: Color(0xFF686868),
                     onPressed: () {
                       Navigator.of(context).pop();
@@ -100,6 +136,57 @@ class ConfirmReportView extends StatelessWidget {
                                   .apply(color: Colors.red[400]),
                             ),
                             SizedBox(
+                              height: 10,
+                            ),
+
+                            TextButtonAdaptive(
+                              text: 'UPLOAD MEDICAL CERTIFICATE',
+                              tapEvent: () {
+
+                                final title = "Document upload";
+                                final message = "Upload proof that your are indeed positive of COVID-19.";
+                                final msg = Text(message);
+                                final buttons = [
+                                  {
+                                    "text": "Camera",
+                                    "action": (){
+                                      // Navigator.pop(context);
+                                      getImageFromCamera();
+                                    }
+                                  },
+                                  {
+                                    "text": "Photo Library",
+                                    "action": (){
+                                      // Navigator.pop(context);
+                                      getImageFromGallery();
+                                    }
+                                  },
+                                ];
+
+                                ActionSheetAdaptive(
+                                  title: title,
+                                  message: message,
+                                  isIncludeCancel: true,
+                                  buttons: buttons,
+                                ).show(context);
+                              },
+                            ),
+
+                            (selectedImage != null
+                              ? Container(
+                                height: 100.0,
+                                width: 150.0,
+                                decoration: new BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: new BorderRadius.all(
+                                      Radius.circular(15.0),
+                                    )),
+                                child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(15),
+                                    child: new Image.file(selectedImage, fit: BoxFit.cover)))
+                            : Container()),
+
+                            SizedBox(
                               height: 40,
                             ),
                             ConfirmationSlider(
@@ -108,11 +195,49 @@ class ConfirmReportView extends StatelessWidget {
                               foregroundShape: BorderRadius.circular(5.0),
                               foregroundColor: appColor,
                               onConfirmation: () async {
-                                String value = await getStringValuesSF("token");
-                                FirebaseFirestore.instance.collection("exposure").add({
-                                  "exception": value
-                                });
-                                Navigator.of(context).pushNamedAndRemoveUntil("/confirmSuccess", (route) => false);
+                                if(selectedImage != null) {
+
+                                  AlertDialogAdaptive(
+                                    title: "Please wait",
+                                    barrierDismissible: false,
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text("....."),
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 15),
+                                          child: (isIosss ? CupertinoActivityIndicator(
+                                            animating: true,
+                                            radius: 20,
+                                          ) : CircularProgressIndicator()),
+                                        )
+                                      ],
+                                    ),
+                                    buttons: [],
+                                  ).show(context);
+
+                                  String value = await getStringValuesSF("token");
+                                  String uid = await getStringValuesSF("id_number");
+                                  if(value != null && uid != null) {
+                                    FirebaseFirestore.instance.collection("exposure").doc(uid).set({
+                                      "exception": value,
+                                      "status": "Suspected"
+                                    })
+                                        .then((val) async {
+                                          final Reference ref = FirebaseStorage.instance.ref().child('images').child(uid);
+                                          final UploadTask uploadTask = ref.putFile(selectedImage);
+                                          final TaskSnapshot taskSnapshot = await uploadTask;
+                                          final url = await taskSnapshot.ref.getDownloadURL();
+                                          FirebaseFirestore.instance.collection("exposure").doc(uid).set({
+                                            "url": url
+                                          }, SetOptions(merge: true));
+                                          Navigator.of(context).pushNamedAndRemoveUntil("/confirmSuccess", (route) => false);
+                                        })
+                                        .catchError((onError) => print(onError));
+                                  }
+                                }else {
+                                  Toast.show("Upload documents for your medical certificate.", context, duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+                                }
                               },
                             ),
                             SizedBox(

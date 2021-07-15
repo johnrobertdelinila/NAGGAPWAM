@@ -194,6 +194,44 @@ class SettingsPage extends StatelessWidget {
             SizedBox(height: 15,),
             ListTile(
               title: Text(
+                "Policy on Acquisition of App",
+                style: kMainTextStyle,
+              ),
+              subtitle: Text(
+                "",
+                style: greyTExt,
+              ),
+              trailing: Icon(
+                Icons.keyboard_arrow_right,
+                color: Colors.grey.shade400,
+              ),
+              onTap: () {
+                AlertDialogAdaptive(
+                  title: "Policy on Acquisition",
+                  barrierDismissible: true,
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(isIos ? CupertinoIcons.info_circle : Icons.info_outline, size: 30,),
+                        Text(acquisition),
+                      ],
+                    ),
+                  ),
+                  buttons: [
+                    {
+                      "text": "Okay",
+                      "action": () {
+                        Navigator.pop(context);
+                      }
+                    },
+                  ],
+                ).show(context);
+              },
+            ),
+            SizedBox(height: 15,),
+            ListTile(
+              title: Text(
                 "Share the App",
                 style: kMainTextStyle,
               ),

@@ -87,8 +87,7 @@ class Jumbotron extends StatelessWidget {
               "action": (){
                 // Navigator.pop(context);
                 final User user = FirebaseAuth.instance.currentUser;
-                final uid = user.uid;
-                if(uid != null) {
+                if(user != null && user.uid != null) {
                   return Navigator.pushNamed(context, "/qrScan");
                 }
                 Navigator.of(context).pushNamed("/signIn");

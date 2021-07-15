@@ -10,7 +10,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' as foundation;
-
 import 'alertdialog_adaptive.dart';
 import 'inputs/text_field_adaptive.dart';
 
@@ -88,16 +87,7 @@ class _ScaffoldAdaptiveState extends State<ScaffoldAdaptive> {
         key: widget.scaffoldKey,
         backgroundColor: widget.backgroundColor != null ? widget.backgroundColor : null,
         body: widget.isIncludeBottomBarAndroid ? tabs[currentTabIndex] : widget.child,
-        floatingActionButton: widget.isIncludeBottomBarAndroid ? FutureBuilder(
-          future: getStringValuesSF("id_number"),
-          builder: (context, snap) {
-            if(snap.hasData && snap.data != null) {
-              return fab;
-            }else {
-                return SizedBox();
-            }
-          },
-        ) : null,
+        floatingActionButton: null,
         bottomNavigationBar: widget.isIncludeBottomBarAndroid == null || !widget.isIncludeBottomBarAndroid ?
           null :
           BottomNavigationBar(
@@ -122,7 +112,8 @@ class _ScaffoldAdaptiveState extends State<ScaffoldAdaptive> {
           future: getStringValuesSF("id_number"),
           builder: (context, snap) {
             if(snap.hasData && snap.data != null) {
-              return Padding(padding: const EdgeInsets.only(bottom: 60.0), child: fab);
+              // return Padding(padding: const EdgeInsets.only(bottom: 60.0), child: fab);
+              return SizedBox();
             }else {
               return SizedBox();
             }
